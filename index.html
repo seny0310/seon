@@ -803,6 +803,30 @@ body.dark .msg.user .bubble{background:var(--surface3);color:var(--text);border-
 <div id="toast"></div>
 
 <script>
+const API_BASE = "https://seon.rovenso92.workers.dev";
+
+async function callClaude(payload){
+  const r = await fetch(`${API_BASE}/v1/messages`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(payload)
+  });
+
+  const data = await r.json();
+  return data;
+}
+
+function extractClaudeText(d){
+  if(!d) return "응답 없음";
+  if(Array.isArray(d.content)){
+    return d.content.map(c=>c.text||"").join("");
+  }
+  if(d.reply) return d.reply;
+  return "응답 없음";
+}
+   
 const SK = 'skybanner_v4';
 const PALETTES = ['#d4722a','#2a9d8f','#6c63ff','#e76f51','#2196f3','#8bc34a','#f06292','#ff9800','#795548'];
 const EMOJIS   = ['🎬','📸','🎵','💡','📊','🖌️','🏆','💼','🔍','⚡','🌿','🎤','🛠️','📱','✉️','🗺️','🎯','🧩'];
@@ -1136,8 +1160,16 @@ async function sendMsg(txt){
   const brandMd=(pj?.brandMd||'').trim();
   const sys=baseSys + (brandMd?(`\n\n[브랜드.md]\n${brandMd}`):'');
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    const r=await fetch('const d = await callClaude({
+  model: "claude-sonnet-4-6",
+  max_tokens: 1500,
+  system: sys,
+  messages: hist.map(m => ({ role: m.role, content: m.content }))
+});
+
+const reply = extractClaudeText(d);
+   ',{method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:sys,messages:hist.map(m=>({role:m.role,content:m.content}))})});
     const d=await r.json();
     if(d.error){ throw new Error(d.error.message||'API 오류'); }
@@ -1196,8 +1228,8 @@ async function runMulti(){
   el.innerHTML=`<div class="multi-wrap"><div class="multi-hd">⊕ 멀티 브리핑 — ${esc(q)}</div><div id="multiLoading" style="padding:20px;text-align:center;color:var(--text3);font-size:13px">${crews.length}명 검토 중<div class="loading-dots" style="justify-content:center;margin-top:10px"><span></span><span></span><span></span></div></div></div>`;
   const results=await Promise.allSettled(crews.map(async crew=>{
     const sys=typeof crew.sys==='function'?crew.sys(pj):crew.sys;
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    const r=await fetch('https://seon.rovenso92.workers.dev/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,system:sys,messages:[{role:'user',content:q}]})});
     const d=await r.json();
     if(d.error){ throw new Error(d.error.message); }
@@ -1261,7 +1293,7 @@ async function sendRelayMsg(text, fromCrewName){
   const sys=typeof crew.sys==='function'?crew.sys(pj):crew.sys;
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:sys,
         messages:hist.map(m=>({role:m.role,content:m.content}))})});
     const d=await r.json();
@@ -1371,7 +1403,7 @@ ${contextSummary}
   try{
     const r = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         model:'claude-sonnet-4-6', max_tokens:1500, system:sys,
         messages: newHist.map(m=>({role:m.role, content:m.content}))
