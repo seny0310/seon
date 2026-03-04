@@ -805,14 +805,13 @@ body.dark .msg.user .bubble{background:var(--surface3);color:var(--text);border-
 <script>
 const API_BASE = "https://seon.rovenso92.workers.dev";
 
-async function callClaude(payload){
-  const r = await fetch(`${API_BASE}/v1/messages`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify(payload)
-  });
+const r = await fetch(`${API_BASE}/proxy`,{
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify(payload)
+});
 
   const data = await r.json();
   return data;
@@ -1228,7 +1227,7 @@ async function runMulti(){
   el.innerHTML=`<div class="multi-wrap"><div class="multi-hd">⊕ 멀티 브리핑 — ${esc(q)}</div><div id="multiLoading" style="padding:20px;text-align:center;color:var(--text3);font-size:13px">${crews.length}명 검토 중<div class="loading-dots" style="justify-content:center;margin-top:10px"><span></span><span></span><span></span></div></div></div>`;
   const results=await Promise.allSettled(crews.map(async crew=>{
     const sys=typeof crew.sys==='function'?crew.sys(pj):crew.sys;
-    const r=await fetch('https://seon.rovenso92.workers.dev/v1/messages',{method:'POST',
+    const r=await fetch('https://seon.rovenso92.workers.dev/proxy',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,system:sys,messages:[{role:'user',content:q}]})});
     const d=await r.json();
@@ -1292,7 +1291,7 @@ async function sendRelayMsg(text, fromCrewName){
   const crew=getCrewById(S.currentCrew); const pj=getPjById(S.currentPj);
   const sys=typeof crew.sys==='function'?crew.sys(pj):crew.sys;
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    const r=await fetch('https://api.anthropic.com/proxy',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:sys,
         messages:hist.map(m=>({role:m.role,content:m.content}))})});
@@ -1401,7 +1400,7 @@ ${contextSummary}
 
   const sys = typeof newCrew.sys==='function' ? newCrew.sys(pj) : newCrew.sys;
   try{
-    const r = await fetch('https://api.anthropic.com/v1/messages',{
+    const r = await fetch('https://api.anthropic.com/proxy',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
